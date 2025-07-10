@@ -44,6 +44,7 @@ class Agent(ABC):
     def set_cli_console(self, cli_console: CLIConsole | None) -> None:
         """Set the CLI console for this agent."""
         self.cli_console = cli_console
+        self.cli_console = None
 
     @abstractmethod
     def new_task(

@@ -181,6 +181,8 @@ Follow these steps methodically:
 - The sequential_thinking tool can help you break down complex problems, analyze issues step-by-step, and ensure a thorough approach to problem-solving.
 - Don't hesitate to use it multiple times throughout your thought process to enhance the depth and accuracy of your solutions.
 
+Notice make sure parameter name is right when returning tool_calls, it's IMPORTANT.
+
 If you are sure the issue has been solved, you should call the `task_done` to finish the task."""
 
     @override
