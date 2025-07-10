@@ -1,9 +1,11 @@
+from typing import Dict
+from websocket.utils.mcp_client import SSEClient, MCPClientBase
+
 class MCPClientManager:
     def __init__(self) -> None:
-        self.clients = {}
+        self.clients: Dict[str, MCPModelClient] = {}
 
-    def get_client(self, provider: str) -> MCPModelClient:
-        if provider not in self.clients:
-            return None
-        return self.clients[provider]
+    def get_client(self, provider: str) -> MCPClientBase:
+        # TODO: get client according to database type
+        return SSEClient("http://localhost:9000/sse")
     

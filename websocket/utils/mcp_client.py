@@ -6,6 +6,7 @@ from fastmcp.client.transports import (
     StreamableHttpTransport,
     SSETransport
 )
+from mcp.types import Tool
 
 class MCPClientBase:
     """Base class for MCP clients using fastmcp framework"""
@@ -46,7 +47,7 @@ class MCPClientBase:
         await self.client.ping()
         return True
 
-    async def get_tools(self) -> List[Dict]:
+    async def list_tools(self) -> List[Tool]:
         """List available tools on server"""
         if not self.connected:
             raise RuntimeError("Not connected to server")
@@ -103,9 +104,9 @@ class MCPClientBase:
         prompt = await self.client.get_prompt(prompt_name, arguments)
         return prompt.text
 
-    async def test_get_tools(self):
+    async def test_list_tools(self):
         await self.__aenter__()
-        tools = await self.get_tools()
+        tools = await self.list_tools()
         print(tools)
         await self.__aexit__(None, None, None)
 
@@ -159,15 +160,15 @@ class MemoryClient(MCPClientBase):
 async def test():
     # HTTP Client Example
     client = SSEClient("http://localhost:9000/sse")
-    t = await client.test_get_tools()
+    t = await client.test_list_tools()
     print(t)
     async with SSEClient("http://localhost:9000/sse") as client:
         if await client.ping():
             print("Server connected")
         
         # Get available tools
-        tools = await client.get_tools()
-        print(tools)
+        tools = await client.list_tools()
+        print(tools[0])
         #print(f"Available tools: {[t['name'] for t in tools]}")
 
     #    resources = await client.get_resources()

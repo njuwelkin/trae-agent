@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from agent.session_manager import SessionManager
+from agent.mcp_client_manager import MCPClientManager
 from agent.agent import Agent
 from utils.config import load_config
 from utils.output_stream import WebSocketOutputStream
@@ -30,7 +31,8 @@ async def websocket_endpoint(websocket: WebSocket):
             conversation = session.newConversation()
             conversation.context["user_message"] = message.get("content", "")
             conversation.context["output_stream"] = WebSocketOutputStream(websocket)
-            # todo: get db info from message and save to context
+            conversation.context["mcp_client"] = app.state.mcp_client_manager.get_client()
+            # todo: get db info from message and create the right mcp client
             
             agent = Agent()
             await agent.run(conversation)
@@ -43,6 +45,7 @@ async def websocket_endpoint(websocket: WebSocket):
 async def startup_event():
     app.state.config = load_config()
     app.state.session_manager = SessionManager()
+    app.state.mcp_client_manager = MCPClientManager()
 
 if __name__ == "__main__":
     import uvicorn
