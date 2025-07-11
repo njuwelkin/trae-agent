@@ -1,6 +1,6 @@
 from .pocketflow import AsyncNode
 from db_agent.utils.mcp_client import MCPClientBase
-from db_agent.tools import tools_registry
+from db_agent.tools import TaskDoneTool, SequentialThinkingTool
 from db_agent.tools import Tool as LocalTool
 from db_agent.utils.output_stream import OutputStream
 from mcp.types import Tool as MCPTool
@@ -24,6 +24,9 @@ class GetToolsNode(AsyncNode):
     async def exec_async(self, prep_res):
         """Retrieve tools from the MCP server"""
         mcp_client: MCPClientBase = prep_res
+        if mcp_client is None:
+            return [], None
+
         try:
             async with mcp_client:
                 tools = await mcp_client.list_tools()
@@ -46,14 +49,18 @@ class GetToolsNode(AsyncNode):
         # TODO: get provider from llm_client
         #provider = self.llm_client.provider.value
         provider = "deepseek"
-        local_tools: list[LocalTool] = [
-            tools_registry[tool_name](model_provider=provider)
-            for tool_name in ["sequentialthinking", "task_done"]
-        ]
+        #local_tools: list[LocalTool] = [
+        #    tools_registry[tool_name](model_provider=provider)
+        #    for tool_name in ["sequentialthinking", "task_done"]
+        #]
+        local_tools: list[LocalTool] = []
+        local_tools.append(SequentialThinkingTool(model_provider=provider))
+        local_tools.append(TaskDoneTool(model_provider=provider, call_back=lambda: shared.update({"task_done": True})))
         shared['local_tools'] = local_tools
         tool_caller: ToolExecutor = ToolExecutor(local_tools)
         shared['tool_caller'] = tool_caller
         print(local_tools)
+
         shared['next_messages'] = [
             LLMMessage(role="system", content=self.get_system_prompt()),
             LLMMessage(role="user", content=shared["user_message"]),

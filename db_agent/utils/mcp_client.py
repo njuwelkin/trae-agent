@@ -1,5 +1,6 @@
 import asyncio
 from typing import Any, Dict, List, Optional, Union
+from click import command
 from fastmcp import Client as FastMCPClient
 from fastmcp.client.transports import (
     StdioTransport,
@@ -7,6 +8,7 @@ from fastmcp.client.transports import (
     SSETransport
 )
 from mcp.types import Tool
+from fastmcp.client.client import CallToolResult
 
 class MCPClientBase:
     """Base class for MCP clients using fastmcp framework"""
@@ -55,7 +57,7 @@ class MCPClientBase:
         #await self.client.__aenter__()
         #tools = await self.client.list_tools()
 
-    async def call_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Any:
+    async def call_tool(self, tool_name: str, parameters: Dict[str, Any]) -> CallToolResult:
         """
         Execute a server tool with parameters
         
@@ -134,18 +136,18 @@ class StreamableHttpClient(MCPClientBase):
 
 class StdioClient(MCPClientBase):
     """Client for STDIO transport (local scripts)"""
-    def __init__(self, script_path: str, **kwargs):
+    def __init__(self, command, args: [str], env: dict = {}, cwd: str = ".", keep_alive: bool = True):
         """
         :param script_path: Path to server script (e.g., "./server.py")
         """
         transport = StdioTransport(
-            command="python",
-            args=[script_path],
-            env=kwargs.get("env", {}),
-            cwd=kwargs.get("cwd", "."),
-            keep_alive=kwargs.get("keep_alive", True)
+            command=command,
+            args=args,
+            env=env,
+            cwd=cwd,
+            keep_alive=keep_alive
         )
-        super().__init__(transport, **kwargs)
+        super().__init__(transport)
 
 
 class MemoryClient(MCPClientBase):
@@ -171,17 +173,41 @@ async def test():
         print(tools[0])
         #print(f"Available tools: {[t['name'] for t in tools]}")
 
-    #    resources = await client.get_resources()
-    #    print(resources)
+    
 
-    #    prompts = await client.get_prompts()
-    #    print(prompts)
+async def test2():
+    """Initialize stdio client with MySQL local configuration"""
+    client = StdioClient(
+        command="uv",
+        args=[
+            "--directory",
+            "/opt/anaconda3/bin",
+            "run",
+            "mysql_mcp_server"
+        ],
+        env={
+            "MYSQL_HOST": "127.0.0.1",
+            "MYSQL_PORT": "3306",
+            "MYSQL_USER": "root",
+            "MYSQL_PASSWORD": "my-secret-pw",
+            "MYSQL_DATABASE": "test"
+        }
+    )
+    async with client:
+        if await client.ping():
+            print("Server connected")
         
-        # Call calculator tool
-        #result = await client.call_tool("calculate", {"a": 5, "b": 3, "op": "*"})
-        #print(f"Calculation result: {result.data}")  # 15 :cite[1]:cite[2]
-    #tools = await client.get_tools()
-    #print(tools)
+        # Get available tools
+        tools = await client.list_tools()
+        print(tools)
+        # Call a tool
+        result = await client.call_tool(
+            tool_name="execute_sql",
+            parameters={
+                "query": "SHOW TABLES;"
+            }
+        )
+        print(result)
 
 if __name__ == "__main__":
-    asyncio.run(test())
+    asyncio.run(test2())

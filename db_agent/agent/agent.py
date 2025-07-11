@@ -11,21 +11,19 @@ class Agent:
         self.get_tool_node = GetToolsNode()
         self.decide_node = DecideNode()
         self.execute_node = ExecuteToolsNode()
-        self.check_result_node = CheckResultNode()
         self.complete_node = CompleteNode()
         self.error_node = ErrorNode()
         
         self.get_tool_node - "call_llm" >> self.decide_node
         self.decide_node - "execute" >> self.execute_node
         self.decide_node - "call_llm" >> self.decide_node
-        self.execute_node - "check" >> self.check_result_node
-        self.check_result_node - "call_llm" >> self.decide_node
-        self.check_result_node - "complete" >> self.complete_node
+        self.decide_node - "complete" >> self.complete_node
+        self.execute_node - "call_llm" >> self.decide_node
+        self.execute_node - "complete" >> self.complete_node
 
         self.get_tool_node - "error" >> self.error_node
         self.decide_node - "error" >> self.error_node
         self.execute_node - "error" >> self.error_node
-        self.check_result_node - "error" >> self.error_node
 
 
     async def run(self, conversation: Conversation) -> None:
@@ -36,25 +34,6 @@ class Agent:
             flow = AsyncFlow(self.get_tool_node)
         await flow.run_async(conversation.context)
 
-
-
-
-class CheckResultNode(AsyncNode): # maybe reflect node, check result is done in post of execute
-    async def prep_async(self, shared):
-        """Initialize and get tools"""
-        output_stream : OutputStream = shared["output_stream"]
-        await output_stream.start_chunk()
-        await output_stream.send_text("reflect...")
-        await output_stream.end_chunk()
-        return ""
-
-    async def exec_async(self, prep_res):
-        """Retrieve tools from the MCP server"""
-        return "tools"
-
-    async def post_async(self, shared, prep_res, exec_res):
-        """Store tools and process to decision node"""
-        return "complete"
 
 class CompleteNode(AsyncNode):
     async def prep_async(self, shared):

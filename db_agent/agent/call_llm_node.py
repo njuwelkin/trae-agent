@@ -50,7 +50,7 @@ class DecideNode(AsyncNode):
 
         if self.llm_indicates_task_completed(llm_response):
             if self.is_task_completed(llm_response):
-                return "completed"
+                return "complete"
             else:
                 shared["next_messages"] = [
                     LLMMessage(
@@ -58,7 +58,7 @@ class DecideNode(AsyncNode):
                         content="#tell llm task is incomplete and the reason"
                     )
                 ]
-                return "continue"
+                return "call_llm"
         else:  # if self.llm_indicates_task_completed
             tool_calls = llm_response.tool_calls
             if tool_calls and len(tool_calls) > 0:
@@ -71,7 +71,7 @@ class DecideNode(AsyncNode):
                         content="It seems that you have not completed the task.",
                     )
                 ]
-                return "continue"
+                return "call_llm"
 
     def llm_indicates_task_completed(self, llm_response: LLMResponse) -> bool:
         """Check if the LLM indicates that the task is completed. Override for custom logic."""
