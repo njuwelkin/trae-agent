@@ -1,6 +1,6 @@
 from .pocketflow import AsyncNode
 from db_agent.utils.mcp_client import MCPClientBase
-from db_agent.tools import TaskDoneTool, SequentialThinkingTool
+from db_agent.tools import TaskDoneTool, SequentialThinkingTool, ChatHistoryTool
 from db_agent.tools import Tool as LocalTool
 from db_agent.utils.output_stream import OutputStream
 from mcp.types import Tool as MCPTool
@@ -12,6 +12,7 @@ class GetToolsNode(AsyncNode):
         Choose MCP server according to user message .
         Get Tools from MCP server.
         Get Local Tools.
+        Prepare every thing
     """
     async def prep_async(self, shared):
         """Initialize and get tools"""
@@ -19,6 +20,10 @@ class GetToolsNode(AsyncNode):
         output_stream.update_status("Getting tools")
 
         mcp_client = shared["mcp_client"]
+        shared['chat_history'] = [
+            #LLMMessage(role="user", content=shared["user_message"]),
+            {"role": "user", "content": shared["user_message"]}
+        ]
         return mcp_client
 
     async def exec_async(self, prep_res):
@@ -46,6 +51,7 @@ class GetToolsNode(AsyncNode):
         shared['mcp_tools'] = mcp_tools
         print([tool.name for tool in mcp_tools])
 
+        session = shared['session']
         # TODO: get provider from llm_client
         #provider = self.llm_client.provider.value
         provider = "deepseek"
@@ -56,6 +62,7 @@ class GetToolsNode(AsyncNode):
         local_tools: list[LocalTool] = []
         local_tools.append(SequentialThinkingTool(model_provider=provider))
         local_tools.append(TaskDoneTool(model_provider=provider, call_back=lambda: shared.update({"task_done": True})))
+        local_tools.append(ChatHistoryTool(model_provider=provider, call_back=session.dump_chat_history))
         shared['local_tools'] = local_tools
         tool_caller: ToolExecutor = ToolExecutor(local_tools)
         shared['tool_caller'] = tool_caller
@@ -117,4 +124,10 @@ Follow these steps methodically:
 
 Notice make sure parameter name is right when returning tool_calls, it's IMPORTANT.
 
-If you are sure the issue has been solved, you should call the `task_done` to finish the task."""
+If you think answering this question requires some contextual information that might be found in the chat history. You should call the `chat_history` tool to get the chat history.
+
+If you are sure the issue has been solved, you should call the `task_done` to finish the task.
+If you think the conversation is done, you should call the `task_done` to finish the conversation.
+If you think you have answered the question, you should call the `task_done` to finish the conversation.
+If user are not asking a question or apply a task, just send a greeting, you should call the `task_done` to finish the conversation after reply.
+"""

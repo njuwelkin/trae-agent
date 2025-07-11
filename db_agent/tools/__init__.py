@@ -10,6 +10,7 @@ from .base import Tool, ToolCall, ToolExecutor, ToolResult
 #from .edit_tool import TextEditorTool
 from .sequential_thinking_tool import SequentialThinkingTool
 from .task_done_tool import TaskDoneTool
+from .chat_history_tool import ChatHistoryTool
 
 __all__ = [
     "Tool",
@@ -20,6 +21,7 @@ __all__ = [
     #"TextEditorTool",
     "SequentialThinkingTool",
     "TaskDoneTool",
+    "ChatHistoryTool",
 ]
 
 tools_registry: dict[str, Type[Tool]] = {

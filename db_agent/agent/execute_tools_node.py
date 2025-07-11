@@ -25,7 +25,7 @@ class ExecuteToolsNode(AsyncNode):
 
         for call in tool_calls:
             results: list[ToolResult] = []
-            if call.name in ["sequentialthinking", "task_done"]:
+            if call.name in ["sequentialthinking", "task_done", "chat_history"]:
                 results.append(await self.exec_local_tool(call))
             else:
                 if self.mcp_client is not None:

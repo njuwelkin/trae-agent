@@ -46,6 +46,10 @@ class DecideNode(AsyncNode):
 
         llm_response: LLMResponse = llm_response
         if len(llm_response.content) > 0:
+            shared['chat_history'].append(
+                #LLMMessage(role="assistant", content=llm_response.content)
+                {"role": "assistant", "content": llm_response.content}
+            )
             await output_stream.send_chunk(llm_response.content)
 
         if self.llm_indicates_task_completed(llm_response):

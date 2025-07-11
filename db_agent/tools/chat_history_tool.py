@@ -2,11 +2,12 @@
 # SPDX-License-Identifier: MIT
 
 from typing import override
+import json
 
 from .base import Tool, ToolCallArguments, ToolExecResult, ToolParameter
 
 
-class TaskDoneTool(Tool):
+class ChatHistoryTool(Tool):
     """Tool to mark a task as done."""
 
     def __init__(self, model_provider: str | None = None, call_back: any = None) -> None:
@@ -19,14 +20,13 @@ class TaskDoneTool(Tool):
 
     @override
     def get_name(self) -> str:
-        return "task_done"
+        return "chat_history"
 
     @override
     def get_description(self) -> str:
-        return """
-        Report the completion of the task.
-        And/or call it whenever you think the conversation is done
-        Note that you cannot call this tool before any verification is done. You can write reproduce / test script to verify your solution.
+        return """The tool returns the chat history of current user. 
+        The chat history is a list of dictionaries, each dictionary contains the role and content of a message.
+        It's called when you think answering this question requires some contextual information that can be found in the chat history.
         """
 
     @override
@@ -35,6 +35,7 @@ class TaskDoneTool(Tool):
 
     @override
     async def execute(self, arguments: ToolCallArguments) -> ToolExecResult:
+        result = []
         if self._call_back:
-            self._call_back()
-        return ToolExecResult(output="Task done.")
+            result = self._call_back()
+        return ToolExecResult(output=json.dumps(result))

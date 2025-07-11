@@ -23,7 +23,14 @@ class Session:
     def newConversation(self) -> Conversation:
         conversation_id = str(uuid.uuid4())
         self.conversations[conversation_id] = Conversation(conversation_id)
+        self.conversations[conversation_id].context['session'] = self
         return self.conversations[conversation_id]
+
+    def dump_chat_history(self) -> list:
+        ret = []
+        for conversation in self.conversations.values():
+            ret.extend(conversation.context['chat_history'])
+        return ret
 
 class SessionManager:
     sessions: Dict[str, Session] = {}
