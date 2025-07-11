@@ -30,9 +30,20 @@ class OutputStream(ABC):
     async def send_text(self, text: str) -> None:
         pass
 
+    @abstractmethod
+    async def start_chunk(self) -> None:
+        pass
 
     @abstractmethod
-    async def update_status(self, status: MessageType) -> None:
+    async def end_chunk(self) -> None:
+        pass
+
+    @abstractmethod
+    async def send_chunk(self) -> None:
+        pass
+
+    @abstractmethod
+    async def update_status(self, content: str) -> None:
         pass
 
 class WebSocketOutputStream(OutputStream):
@@ -46,6 +57,18 @@ class WebSocketOutputStream(OutputStream):
         message = OutputMessage(MessageType.CHUNK, text)
         await self.websocket.send_json(message.to_dict())
 
-    async def update_status(self, status: MessageType) -> None:
-        message = OutputMessage(status.value, "")
+    async def start_chunk(self) -> None:
+        await self.websocket.send_json(OutputMessage(MessageType.START, "").to_dict())
+
+    async def end_chunk(self) -> None:
+        await self.websocket.send_json(OutputMessage(MessageType.END, "").to_dict())
+
+    async def send_chunk(self, text: str) -> None:
+        await self.websocket.send_json(OutputMessage(MessageType.START, "").to_dict())
+        message = OutputMessage(MessageType.CHUNK, text)
+        await self.websocket.send_json(message.to_dict())
+        await self.websocket.send_json(OutputMessage(MessageType.END, "").to_dict())
+
+    async def update_status(self, content: str) -> None:
+        message = OutputMessage(MessageType.STATUS, content)
         await self.websocket.send_json(message.to_dict())

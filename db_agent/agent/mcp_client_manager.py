@@ -1,5 +1,5 @@
 from typing import Dict
-from websocket.utils.mcp_client import SSEClient, MCPClientBase
+from db_agent.utils.mcp_client import SSEClient, MCPClientBase
 
 class MCPClientManager:
     def __init__(self) -> None:

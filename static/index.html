@@ -198,6 +198,8 @@
                 sendButton.disabled = false;
                 statusDiv.textContent = 'Connected';
                 messageInput.focus();
+            } else if (data.type === 'status') {
+                statusDiv.textContent = data.content;
             }
         };
 
