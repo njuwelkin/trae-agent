@@ -8,7 +8,7 @@ from db_agent.utils.llm_basics import LLMMessage
 from db_agent.tools import ToolExecutor
 from .prompt import *
 
-class GetToolsNode(AsyncNode):
+class PrepareNode(AsyncNode):
     """ 
         Choose MCP server according to user message .
         Get Tools from MCP server.
@@ -25,6 +25,8 @@ class GetToolsNode(AsyncNode):
             #LLMMessage(role="user", content=shared["user_message"]),
             {"role": "user", "content": shared["user_message"]}
         ]
+        shared['task_done'] = False
+        shared['answer']: list[str] = []
         return mcp_client
 
     async def exec_async(self, prep_res):
@@ -59,10 +61,14 @@ class GetToolsNode(AsyncNode):
         #local_tools: list[LocalTool] = [
         #    tools_registry[tool_name](model_provider=provider)
         #    for tool_name in ["sequentialthinking", "task_done"]
-        #]
+#]
         local_tools: list[LocalTool] = []
         local_tools.append(SequentialThinkingTool(model_provider=provider))
-        local_tools.append(TaskDoneTool(model_provider=provider, call_back=lambda: shared.update({"task_done": True})))
+        local_tools.append(TaskDoneTool(model_provider=provider, 
+            can_complete=lambda: len(shared["answer"]) > 0,
+            set_complete=lambda: shared.update({"task_done": True}),
+            incomplete_prompt="It seems that you have not completed the task. You should return result to user.",
+        ))
         local_tools.append(ChatHistoryTool(model_provider=provider, call_back=session.dump_chat_history))
         shared['local_tools'] = local_tools
         tool_caller: ToolExecutor = ToolExecutor(local_tools)

@@ -1,27 +1,31 @@
 from .session_manager import Conversation
 from .pocketflow import AsyncFlow, AsyncNode
 from db_agent.utils.output_stream import OutputStream, MessageType
-from .prepare_node import GetToolsNode
-from .call_llm_node import DecideNode
+from .prepare_node import PrepareNode
+from .decide_tool_node import DecideNode
 from .execute_tools_node import ExecuteToolsNode
+#from .explain_node import ExplainNode
 
 class Agent:
     def __init__(self) -> None:
         # create_streaming_chat_flow here
-        self.get_tool_node = GetToolsNode()
+        self.prepare_node = PrepareNode()
         self.decide_node = DecideNode()
+        #self.explain_node = ExplainNode()
         self.execute_node = ExecuteToolsNode()
         self.complete_node = CompleteNode()
         self.error_node = ErrorNode()
         
-        self.get_tool_node - "call_llm" >> self.decide_node
+        self.prepare_node - "call_llm" >> self.decide_node
         self.decide_node - "execute" >> self.execute_node
         self.decide_node - "call_llm" >> self.decide_node
         self.decide_node - "complete" >> self.complete_node
+        #self.decide_node - "explain" >> self.explain_node
+        #self.explain_node - "execute" >> self.execute_node
         self.execute_node - "call_llm" >> self.decide_node
         self.execute_node - "complete" >> self.complete_node
 
-        self.get_tool_node - "error" >> self.error_node
+        self.prepare_node - "error" >> self.error_node
         self.decide_node - "error" >> self.error_node
         self.execute_node - "error" >> self.error_node
 
@@ -32,7 +36,7 @@ class Agent:
             conversation.context['is_continue'] = True
             flow = AsyncFlow(self.execute_node)
         else:
-            flow = AsyncFlow(self.get_tool_node)
+            flow = AsyncFlow(self.prepare_node)
         await flow.run_async(conversation.context)
 
 

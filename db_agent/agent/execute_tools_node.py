@@ -23,8 +23,11 @@ class ExecuteToolsNode(AsyncNode):
         """Retrieve tools from the MCP server"""
         tool_calls: list[ToolCall] = prep_res
 
+        if len(tool_calls) > 1:
+            print(1) # for debug, here we find if tool_calls > 1, there is some issue to return multi results
+
+        results: list[ToolResult] = []
         for call in tool_calls:
-            results: list[ToolResult] = []
             if call.name in ["sequentialthinking", "task_done", "chat_history"]:
                 results.append(await self.exec_local_tool(call))
             else:
@@ -34,24 +37,25 @@ class ExecuteToolsNode(AsyncNode):
 
     async def post_async(self, shared, prep_res, exec_res):
         """Store tools and process to decision node"""
-        if "task_done" in shared:
+        if "task_done" in shared and shared["task_done"]:
             return "complete"
 
         results : list[ToolResult] = exec_res
-        output_stream : OutputStream = shared["output_stream"]
-        await output_stream.send_chunk("")
+        #output_stream : OutputStream = shared["output_stream"]
+        #await output_stream.send_chunk("")
 
+        shared["next_messages"] = []
         for result in results:
             message = LLMMessage(
                 role="user", tool_result=result
             )
-            shared["next_messages"] = [message]
-
-        reflection = self.reflect_on_result(results)
-        if reflection:
-            shared["next_messages"].append(LLMMessage(
-                role="assistant", content=reflection
-            ))
+            shared["next_messages"].append(message)
+       
+        #reflection = self.reflect_on_result(results)
+        #if reflection:
+        #    shared["next_messages"].append(LLMMessage(
+        #        role="assistant", content=reflection
+        #    ))
         
         return "call_llm"
 

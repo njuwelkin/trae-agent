@@ -9,9 +9,15 @@ from .base import Tool, ToolCallArguments, ToolExecResult, ToolParameter
 class TaskDoneTool(Tool):
     """Tool to mark a task as done."""
 
-    def __init__(self, model_provider: str | None = None, call_back: any = None) -> None:
+    def __init__(self, model_provider: str | None = None, 
+        can_complete:any = None, 
+        set_complete: any = None, 
+        incomplete_prompt: str = "Task not done.") -> None:
+        
         super().__init__(model_provider)
-        self._call_back = call_back
+        self._can_complete = can_complete
+        self._set_complete = set_complete
+        self._incomplete_prompt = incomplete_prompt
 
     @override
     def get_model_provider(self) -> str | None:
@@ -35,6 +41,8 @@ class TaskDoneTool(Tool):
 
     @override
     async def execute(self, arguments: ToolCallArguments) -> ToolExecResult:
-        if self._call_back:
-            self._call_back()
-        return ToolExecResult(output="Task done.")
+        if self._can_complete():
+            self._set_complete()
+            return ToolExecResult(output="Task done.")
+        else:
+            return ToolExecResult(output=self._incomplete_prompt)

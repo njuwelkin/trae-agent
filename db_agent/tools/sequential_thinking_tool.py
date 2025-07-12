@@ -302,8 +302,8 @@ You should:
                 self.branches[validated_input.branch_id].append(validated_input)
 
             # Format and display the thought
-            # formatted_thought = self._format_thought(validated_input)
-            # print(formatted_thought, flush=True)  # Print to stdout for immediate feedback
+            formatted_thought = self._format_thought(validated_input)
+            print(formatted_thought, flush=True)  # Print to stdout for immediate feedback
 
             # Prepare response
             response_data = {

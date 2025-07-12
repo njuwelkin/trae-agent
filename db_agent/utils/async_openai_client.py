@@ -60,6 +60,7 @@ class AsyncOpenAIClient():
         local_tools: list[Tool] | None = None,
         mcp_tools: list[MCPTool] | None = None,
         reuse_history: bool = True,
+        log_to_history: bool = True,
     ) -> LLMResponse:
         """Send chat messages to OpenAI with optional tool support."""
         model_parameters: ModelParameters = self.model_parameters
@@ -119,7 +120,8 @@ class AsyncOpenAIClient():
                 f"Failed to get response from OpenAI after max retries: {error_message}"
             )
 
-        self.message_history = api_call_input.copy()
+        if log_to_history:
+            self.message_history = api_call_input.copy()
         self.message_history.append(response.choices[0].message)
 
         tool_calls: list[ToolCall] = []
