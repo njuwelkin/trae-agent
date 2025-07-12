@@ -9,7 +9,7 @@ class DecideNode(AsyncNode):
     async def prep_async(self, shared):
         """Initialize and get tools"""
         output_stream : OutputStream = shared["output_stream"]
-        await output_stream.update_status("Deciding tools")
+        await output_stream.update_status("Thinking")
 
         local_tools = shared["local_tools"]
         mcp_tools = shared["mcp_tools"]
@@ -27,7 +27,7 @@ class DecideNode(AsyncNode):
         messages: list[LLMMessage] = messages
 
         try:
-            llm_response = llm_client.chat(
+            llm_response = await llm_client.a_chat(
                 messages, local_tools, mcp_tools
             )
         except Exception as e:

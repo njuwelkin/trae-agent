@@ -9,6 +9,7 @@ from agent.agent import Agent
 from utils.config import load_config, Config, ModelParameters
 from utils.output_stream import WebSocketOutputStream
 from utils.llm_client import LLMClient
+from utils.async_openai_client import AsyncOpenAIClient
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -38,8 +39,11 @@ async def websocket_endpoint(websocket: WebSocket):
                 conversation.context["mcp_client"] = app.state.mcp_client_manager.get_client("")
                 # todo: get db info from message and create the right mcp client
                 config: Config = app.state.config
-                conversation.context["llm_client"] = LLMClient(
-                    config.default_provider, config.model_providers[config.default_provider]
+                #conversation.context["llm_client"] = LLMClient(
+                #    config.default_provider, config.model_providers[config.default_provider]
+                #)
+                conversation.context["llm_client"] = AsyncOpenAIClient(
+                    config.model_providers[config.default_provider]
                 )
                 agent = Agent()
                 await agent.run(conversation)
