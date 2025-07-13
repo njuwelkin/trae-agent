@@ -143,7 +143,7 @@ Assist users in resolving database system issues and provide expert-level databa
 - You can run bash commands (like tests, a reproduction script, or 'grep'/'find' to find relevant context) in between thoughts.
 - The sequential_thinking tool can help you break down complex problems, analyze issues step-by-step, and ensure a thorough approach to problem-solving.
 - Don't hesitate to use it multiple times throughout your thought process to enhance the depth and accuracy of your solutions.
-- If user's question is in Chinese, you should filling the 'thought' parameter in Chinese.
+- If user's question is in Chinese, you should filling the 'thought' parameter in Chinese, it's IMPORTANT.
 
 Notice make sure parameter name is right when returning tool_calls, it's IMPORTANT. 
 
