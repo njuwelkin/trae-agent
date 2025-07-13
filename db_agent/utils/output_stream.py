@@ -54,8 +54,9 @@ class WebSocketOutputStream(OutputStream):
         await self.websocket.send_json(output_message.to_dict())
 
     async def send_text(self, text: str) -> None:
-        message = OutputMessage(MessageType.CHUNK, text)
-        await self.websocket.send_json(message.to_dict())
+        await self.start_chunk()
+        await self.send_chunk(text)
+        await self.end_chunk()
 
     async def start_chunk(self) -> None:
         await self.websocket.send_json(OutputMessage(MessageType.START, "").to_dict())
@@ -64,10 +65,8 @@ class WebSocketOutputStream(OutputStream):
         await self.websocket.send_json(OutputMessage(MessageType.END, "").to_dict())
 
     async def send_chunk(self, text: str) -> None:
-        await self.websocket.send_json(OutputMessage(MessageType.START, "").to_dict())
         message = OutputMessage(MessageType.CHUNK, text)
         await self.websocket.send_json(message.to_dict())
-        await self.websocket.send_json(OutputMessage(MessageType.END, "").to_dict())
 
     async def update_status(self, content: str) -> None:
         message = OutputMessage(MessageType.STATUS, content)

@@ -8,7 +8,6 @@ from agent.mcp_client_manager import MCPClientManager
 from agent.agent import Agent
 from utils.config import load_config, Config, ModelParameters
 from utils.output_stream import WebSocketOutputStream
-from utils.llm_client import LLMClient
 from utils.async_openai_client import AsyncOpenAIClient
 
 app = FastAPI()

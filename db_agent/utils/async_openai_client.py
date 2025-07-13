@@ -26,6 +26,7 @@ from db_agent.tools.base import Tool, ToolCall, ToolResult
 from .config import ModelParameters
 from .base_client import BaseLLMClient
 from .llm_basics import LLMMessage, LLMResponse, LLMUsage
+from .stream_printer import StreamPrinter
 
 
 class AsyncOpenAIClient():
@@ -36,7 +37,6 @@ class AsyncOpenAIClient():
         self.model_parameters: ModelParameters = model_parameters
 
         self.api_key: str = os.getenv("OPENAI_API_KEY", "")
-
         if self.api_key == "":
             raise ValueError(
                 "OpenAI API key not provided. Set OPENAI_API_KEY in environment variables or config file."
@@ -61,6 +61,7 @@ class AsyncOpenAIClient():
         mcp_tools: list[MCPTool] | None = None,
         reuse_history: bool = True,
         log_to_history: bool = True,
+        printer: StreamPrinter = None
     ) -> LLMResponse:
         """Send chat messages to OpenAI with optional tool support."""
         model_parameters: ModelParameters = self.model_parameters
@@ -106,7 +107,8 @@ class AsyncOpenAIClient():
                 response = await self.get_full_completion_stream(
                     messages=api_call_input,
                     tools=tool_schemas,
-                    model_parameters=model_parameters
+                    model_parameters=model_parameters,
+                    printer=printer
                 )
                 break
             except Exception as e:
@@ -162,7 +164,8 @@ class AsyncOpenAIClient():
         self,
         messages: list[ChatCompletionMessageParam],
         tools: list[ChatCompletionToolParam],
-        model_parameters: ModelParameters
+        model_parameters: ModelParameters,
+        printer: StreamPrinter = None,
     ) -> ChatCompletion:
         """Send chat messages to OpenAI with optional tool support."""
         completion_data = {
@@ -185,6 +188,10 @@ class AsyncOpenAIClient():
 
          # 处理流式响应
         async for chunk in stream:
+            # 如果需要，先行输出
+            if printer:
+                await printer.print_chunk(chunk)
+
             # 收集元数据 (只出现一次)
             chunk: ChatCompletionChunk = chunk
             if completion_data["id"] is None:

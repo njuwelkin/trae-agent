@@ -23,9 +23,6 @@ class ExecuteToolsNode(AsyncNode):
         """Retrieve tools from the MCP server"""
         tool_calls: list[ToolCall] = prep_res
 
-        if len(tool_calls) > 1:
-            print(1) # for debug, here we find if tool_calls > 1, there is some issue to return multi results
-
         results: list[ToolResult] = []
         for call in tool_calls:
             if call.name in ["sequentialthinking", "task_done", "chat_history"]:
@@ -41,8 +38,6 @@ class ExecuteToolsNode(AsyncNode):
             return "complete"
 
         results : list[ToolResult] = exec_res
-        #output_stream : OutputStream = shared["output_stream"]
-        #await output_stream.send_chunk("")
 
         shared["next_messages"] = []
         for result in results:

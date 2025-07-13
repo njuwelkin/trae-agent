@@ -43,9 +43,6 @@ class Agent:
 class CompleteNode(AsyncNode):
     async def prep_async(self, shared):
         """Initialize and get tools"""
-        # save chat to session
-        session: Session = shared['session']
-        #session.dump_chat_history()
         return ""
 
     async def exec_async(self, prep_res):
@@ -54,10 +51,6 @@ class CompleteNode(AsyncNode):
 
     async def post_async(self, shared, prep_res, exec_res):
         """Store tools and process to decision node"""
-        output_stream : OutputStream = shared["output_stream"]
-        await output_stream.start_chunk()
-        await output_stream.send_text("Completed\n\n")
-        await output_stream.end_chunk()
         return "done"
 
 class ErrorNode(AsyncNode):
@@ -73,6 +66,6 @@ class ErrorNode(AsyncNode):
         """Store tools and process to decision node"""
         output_stream : OutputStream = shared["output_stream"]
         await output_stream.start_chunk()
-        await output_stream.send_text("Completed\n\n")
+        await output_stream.send_chunk("Encounter error, not completed\n\n")
         await output_stream.end_chunk()
         return "done"
